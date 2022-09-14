@@ -26,9 +26,12 @@ pub(crate) fn newtype(
         rename: rename_inner,
         inline,
         skip,
+        unwrap_option: _,
         optional,
         flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
+
+    // FIXME: Do I need to crash on unwrap_option?
 
     match (&rename_inner, skip, optional, flatten) {
         (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),

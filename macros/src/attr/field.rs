@@ -9,6 +9,7 @@ pub struct FieldAttr {
     pub rename: Option<String>,
     pub inline: bool,
     pub skip: bool,
+    pub unwrap_option: bool,
     pub optional: bool,
     pub flatten: bool,
 }
@@ -33,14 +34,16 @@ impl FieldAttr {
             rename,
             inline,
             skip,
+            unwrap_option,
             optional,
             flatten,
         }: FieldAttr,
     ) {
         self.rename = self.rename.take().or(rename);
         self.type_override = self.type_override.take().or(type_override);
-        self.inline = self.inline || inline;
-        self.skip = self.skip || skip;
+        self.inline |= inline;
+        self.skip |= skip;
+        self.unwrap_option |= unwrap_option;
         self.optional |= optional;
         self.flatten |= flatten;
     }
@@ -52,7 +55,10 @@ impl_parse! {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
-        "optional" => out.optional = true,
+        "optional" => {
+            out.unwrap_option = true;
+            out.optional = true;
+        },
         "flatten" => out.flatten = true,
     }
 }
@@ -64,7 +70,13 @@ impl_parse! {
         "skip" => out.0.skip = true,
         "skip_serializing" => out.0.skip = true,
         "skip_deserializing" => out.0.skip = true,
-        "skip_serializing_if" => out.0.optional = parse_assign_str(input)? == *"Option::is_none",
+        "skip_serializing_if" => {
+            match parse_assign_str(input)?.as_str() {
+                "Option::is_none" => out.0.unwrap_option = true,
+                _ => (),
+            }
+            out.0.optional = true;
+        },
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {

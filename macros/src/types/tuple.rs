@@ -64,9 +64,12 @@ fn format_field(
         rename,
         inline,
         skip,
+        unwrap_option: _,
         optional,
         flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
+
+    // FIXME: Do I need to crash on unwrap_option?
 
     if skip {
         return Ok(());

@@ -67,6 +67,7 @@ fn format_field(
         rename,
         inline,
         skip,
+        unwrap_option,
         optional,
         flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
@@ -75,9 +76,14 @@ fn format_field(
         return Ok(());
     }
 
-    let (ty, optional_annotation) = match optional {
-        true => (extract_option_argument(&field.ty)?, "?"),
-        false => (&field.ty, ""),
+    let ty = match unwrap_option {
+        true => extract_option_argument(&field.ty)?,
+        false => &field.ty,
+    };
+
+    let optional_annotation = match optional {
+        true => "?",
+        false => "",
     };
 
     if flatten {
@@ -89,16 +95,16 @@ fn format_field(
         }
 
         formatted_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
-        dependencies.append_from(ty);
+        dependencies.append_from(&ty);
         return Ok(());
     }
 
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
-            dependencies.append_from(ty);
+            dependencies.append_from(&ty);
             quote!(<#ty as ts_rs::TS>::inline())
         } else {
-            format_type(ty, dependencies, generics)
+            format_type(&ty, dependencies, generics)
         }
     });
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());

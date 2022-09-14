@@ -70,9 +70,12 @@ fn format_variant(
         rename,
         inline,
         skip,
+        unwrap_option: _,
         optional,
         flatten,
     } = FieldAttr::from_attrs(&variant.attrs)?;
+
+    // FIXME: Do I need to crash on unwrap_option?
 
     match (skip, &type_override, inline, optional, flatten) {
         (true, ..) => return Ok(()),
