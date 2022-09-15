@@ -214,6 +214,15 @@ fn trait_bounds() {
 }
 
 #[test]
+fn slices() {
+    #[derive(TS)]
+    struct A<'a> {
+        t: &'a [&'a [i32]],
+    }
+    assert_eq!(A::decl(), "interface A<> { t: Array<Array<number>>, }");
+}
+
+#[test]
 fn nonstatic_lifetimes() {
     #[derive(TS)]
     struct A<'a> {

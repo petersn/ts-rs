@@ -446,6 +446,24 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
+impl<T: TS> TS for &'static [T] {
+    fn name() -> String {
+        format!("Array<{}>", T::name())
+    }
+
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
+    }
+
+    fn dependencies() -> Vec<Dependency> {
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
 impl<K: TS, V: TS> TS for HashMap<K, V> {
     fn name() -> String {
         "Record".to_owned()
