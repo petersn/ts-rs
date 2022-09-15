@@ -10,7 +10,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
+pub(crate) fn enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
 
     let name = match &enum_attr.rename {
@@ -91,8 +91,10 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
+    let variant_attrs = EnumAttr::from_attrs(&variant.attrs)?;
     let variant_type = types::type_def(
-        &StructAttr::default(),
+        //&StructAttr::default(),
+        &StructAttr::from_enum_attr(variant_attrs),
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,

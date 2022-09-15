@@ -7,6 +7,8 @@ use crate::{
     utils::parse_attrs,
 };
 
+use super::EnumAttr;
+
 #[derive(Default, Clone)]
 pub struct StructAttr {
     pub rename_all: Option<Inflection>,
@@ -27,6 +29,16 @@ impl StructAttr {
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
+    }
+
+    pub fn from_enum_attr(enum_attr: EnumAttr) -> Self {
+        Self {
+            rename_all: enum_attr.rename_all,
+            rename: enum_attr.rename,
+            export_to: enum_attr.export_to,
+            export: enum_attr.export,
+            tag: enum_attr.tag,
+        }
     }
 
     fn merge(

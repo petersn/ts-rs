@@ -9,7 +9,7 @@ mod newtype;
 mod tuple;
 mod unit;
 
-pub(crate) use r#enum::r#enum_def;
+pub(crate) use r#enum::enum_def;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;

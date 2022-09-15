@@ -5,13 +5,13 @@ use crate::{
     utils::parse_attrs,
 };
 
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub struct EnumAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
-    tag: Option<String>,
+    pub tag: Option<String>,
     untagged: bool,
     content: Option<String>,
 }
@@ -49,7 +49,7 @@ impl EnumAttr {
         Ok(result)
     }
 
-    fn merge(
+    pub fn merge(
         &mut self,
         EnumAttr {
             rename_all,
