@@ -8,6 +8,8 @@ use crate::{
     DerivedTS,
 };
 
+use super::make_lifetimes_static;
+
 pub(crate) fn newtype(
     attr: &StructAttr,
     name: &str,
@@ -41,17 +43,17 @@ pub(crate) fn newtype(
         _ => {}
     };
 
-    let inner_ty = &inner.ty;
+    let inner_ty = make_lifetimes_static(&inner.ty);
     let mut dependencies = Dependencies::default();
     match (inline, &type_override) {
         (_, Some(_)) => (),
-        (true, _) => dependencies.append_from(inner_ty),
-        (false, _) => dependencies.push_or_append_from(inner_ty),
+        (true, _) => dependencies.append_from(&inner_ty),
+        (false, _) => dependencies.push_or_append_from(&inner_ty),
     };
     let inline_def = match &type_override {
         Some(o) => quote!(#o.to_owned()),
         None if inline => quote!(<#inner_ty as ts_rs::TS>::inline()),
-        None => format_type(inner_ty, &mut dependencies, generics),
+        None => format_type(&inner_ty, &mut dependencies, generics),
     };
 
     let generic_args = format_generics(&mut dependencies, generics);

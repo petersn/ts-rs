@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeTuple};
 
-use crate::{attr::StructAttr, deps::Dependencies};
+use crate::{attr::StructAttr, deps::Dependencies, types::make_lifetimes_static};
 
 /// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
 /// seperated list of generic arguments, or an empty string if there are no generics.
@@ -35,35 +35,7 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
 }
 
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
-    // Remap all lifetimes to 'static in ty.
-    struct Visitor;
-    impl syn::visit_mut::VisitMut for Visitor {
-        fn visit_type_mut(&mut self, ty: &mut Type) {
-            match ty {
-                Type::Reference(ref_type) => {
-                    ref_type.lifetime = ref_type
-                        .lifetime
-                        .as_ref()
-                        .map(|_| syn::parse2(quote!('static)).unwrap());
-                }
-                _ => {}
-            }
-            syn::visit_mut::visit_type_mut(self, ty);
-        }
-
-        fn visit_generic_argument_mut(&mut self, ga: &mut GenericArgument) {
-            match ga {
-                GenericArgument::Lifetime(lt) => {
-                    *lt = syn::parse2(quote!('static)).unwrap();
-                }
-                _ => {}
-            }
-            syn::visit_mut::visit_generic_argument_mut(self, ga);
-        }
-    }
-    use syn::visit_mut::VisitMut;
-    let mut ty = ty.clone();
-    Visitor.visit_type_mut(&mut ty);
+    let ty = make_lifetimes_static(ty);
 
     // If the type matches one of the generic parameters, just pass the identifier:
     if let Some(generic_ident) = generics

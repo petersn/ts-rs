@@ -13,7 +13,7 @@ impl Dependencies {
     }
 
     /// Adds the given type if it's *not* transparent.
-    /// If it is, all it's child dependencies are added instead.
+    /// If it is, all its child dependencies are added instead.
     pub fn push_or_append_from(&mut self, ty: &Type) {
         self.0.push(quote! {
             if <#ty as ts_rs::TS>::transparent() {

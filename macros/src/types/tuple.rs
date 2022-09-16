@@ -9,6 +9,8 @@ use crate::{
     DerivedTS,
 };
 
+use super::make_lifetimes_static;
+
 pub(crate) fn tuple(
     attr: &StructAttr,
     name: &str,
@@ -58,7 +60,7 @@ fn format_field(
     field: &Field,
     generics: &Generics,
 ) -> Result<()> {
-    let ty = &field.ty;
+    let ty = make_lifetimes_static(&field.ty);
     let FieldAttr {
         type_override,
         rename,
@@ -87,16 +89,16 @@ fn format_field(
     formatted_fields.push(match &type_override {
         Some(o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => format_type(ty, dependencies, generics),
+        None => format_type(&ty, dependencies, generics),
     });
 
     match (inline, &type_override) {
         (_, Some(_)) => (),
         (false, _) => {
-            dependencies.push_or_append_from(ty);
+            dependencies.push_or_append_from(&ty);
         }
         (true, _) => {
-            dependencies.append_from(ty);
+            dependencies.append_from(&ty);
         }
     };
 

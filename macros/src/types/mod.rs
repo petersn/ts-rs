@@ -1,4 +1,5 @@
-use syn::{Fields, Generics, Ident, ItemStruct, Result};
+use quote::quote;
+use syn::{Fields, Generics, Ident, ItemStruct, Result, Type, GenericArgument};
 
 use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
@@ -36,4 +37,37 @@ fn type_def(
         },
         Fields::Unit => unit::unit(attr, &name),
     }
+}
+
+pub fn make_lifetimes_static(ty: &Type) -> Type {
+    // Remap all lifetimes to 'static in ty.
+    struct Visitor;
+    impl syn::visit_mut::VisitMut for Visitor {
+        fn visit_type_mut(&mut self, ty: &mut Type) {
+            match ty {
+                Type::Reference(ref_type) => {
+                    ref_type.lifetime = ref_type
+                        .lifetime
+                        .as_ref()
+                        .map(|_| syn::parse2(quote!('static)).unwrap());
+                }
+                _ => {}
+            }
+            syn::visit_mut::visit_type_mut(self, ty);
+        }
+
+        fn visit_generic_argument_mut(&mut self, ga: &mut GenericArgument) {
+            match ga {
+                GenericArgument::Lifetime(lt) => {
+                    *lt = syn::parse2(quote!('static)).unwrap();
+                }
+                _ => {}
+            }
+            syn::visit_mut::visit_generic_argument_mut(self, ga);
+        }
+    }
+    use syn::visit_mut::VisitMut;
+    let mut ty = ty.clone();
+    Visitor.visit_type_mut(&mut ty);
+    ty
 }
